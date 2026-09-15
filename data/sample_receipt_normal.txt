@@ -1,0 +1,37 @@
+METROPOLITAN HEALTH & CLINICAL DIAGNOSTICS
+Accredited Reference Laboratory | License: LAB-METRO-2026-4401
+----------------------------------------------------------------------
+ROUTINE PREVENTATIVE MEDICAL REPORT & RECEIPT
+Patient Name: Emily Watson              Age: 38 Years
+Gender: Female                          Date: 15-Sep-2026
+Ordering Physician: Dr. Michael Thorne  Test: Comprehensive Health & Kidney Screen
+----------------------------------------------------------------------
+LABORATORY INVESTIGATION FINDINGS:
+
+1. RENAL FUNCTION TESTS (RFT / KFT):
+   - Serum Creatinine (SC)            : 0.82 mg/dL     (Ref: 0.50 - 1.10)  [NORMAL]
+   - Blood Urea Nitrogen (BUN)        : 13.4 mg/dL     (Ref: 7.0 - 20.0)   [NORMAL]
+   - Estimated GFR (eGFR)             : 104.5 mL/min   (Ref: >= 90)        [OPTIMAL]
+   - Serum Electrolytes Sodium (Na)   : 140.0 mEq/L    (Ref: 135 - 145)    [NORMAL]
+   - Serum Electrolytes Potassium (K) : 4.10 mEq/L     (Ref: 3.5 - 5.0)    [NORMAL]
+   - Serum Electrolytes Calcium (Ca)  : 9.40 mg/dL     (Ref: 8.5 - 10.5)   [NORMAL]
+   - Serum Electrolytes Phosphorus (P): 3.30 mg/dL     (Ref: 2.5 - 4.5)    [NORMAL]
+
+2. URINALYSIS & PROTEIN:
+   - Protein In Urine                 : 0.04 g/day     (Ref: < 0.15)       [NEGATIVE]
+   - Albumin-to-Creatinine Ratio (ACR): 8.5 mg/g       (Ref: < 30)         [NORMAL]
+
+3. HEMATOLOGY & METABOLIC:
+   - Hemoglobin Levels (Hb)           : 14.2 g/dL      (Ref: 12.0 - 16.0)  [NORMAL]
+   - Fasting Blood Sugar (FBS)        : 88.0 mg/dL     (Ref: 70 - 100)     [OPTIMAL]
+   - HbA1c                            : 5.2 %          (Ref: < 5.7%)       [NORMAL]
+
+4. VITALS & PHYSIOLOGY:
+   - Blood Pressure (BP)              : 116/74 mmHg    (Ref: < 120/80)     [OPTIMAL]
+   - Body Mass Index (BMI)            : 22.4           (Ref: 18.5 - 24.9)  [NORMAL WEIGHT]
+----------------------------------------------------------------------
+CLINICAL IMPRESSION:
+All evaluated renal and metabolic parameters are strictly within normal reference limits.
+Glomerular filtration rate is optimal with no evidence of pathological proteinuria.
+Routine annual preventative follow-up recommended.
+======================================================================

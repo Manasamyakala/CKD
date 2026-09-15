@@ -1,0 +1,37 @@
+CENTRAL DIAGNOSTIC PATHOLOGY LABORATORY
+Accredited Clinical Reference Lab | Reg: LAB-CKD-2026-9912
+----------------------------------------------------------------------
+PATIENT REPORT & MEDICAL RECEIPT
+Patient Name: Alex Carter               Age: 56 Years
+Gender: Male                            Date: 14-Sep-2026
+Referring Physician: Dr. Sarah Jenkins   Test Panel: Comprehensive Renal Panel
+----------------------------------------------------------------------
+LABORATORY INVESTIGATION FINDINGS:
+
+1. RENAL FUNCTION TESTS (RFT / KFT):
+   - Serum Creatinine (SC)            : 1.85 mg/dL     (Ref: 0.60 - 1.20)  [HIGH]
+   - Blood Urea Nitrogen (BUN)        : 31.5 mg/dL     (Ref: 7.0 - 20.0)   [HIGH]
+   - Estimated GFR (eGFR)             : 44.2 mL/min    (Ref: >= 90)        [LOW]
+   - Serum Electrolytes Sodium (Na)   : 137.0 mEq/L    (Ref: 135 - 145)    [NORMAL]
+   - Serum Electrolytes Potassium (K) : 4.80 mEq/L     (Ref: 3.5 - 5.0)    [NORMAL]
+   - Serum Electrolytes Calcium (Ca)  : 8.90 mg/dL     (Ref: 8.5 - 10.5)   [NORMAL]
+   - Serum Electrolytes Phosphorus (P): 4.20 mg/dL     (Ref: 2.5 - 4.5)    [NORMAL]
+
+2. URINALYSIS & PROTEINURIA:
+   - Protein In Urine                 : 1.60 g/day     (Ref: < 0.15)       [HIGH]
+   - Albumin-to-Creatinine Ratio (ACR): 145.0 mg/g     (Ref: < 30)         [HIGH]
+
+3. HEMATOLOGY & METABOLIC:
+   - Hemoglobin Levels (Hb)           : 11.4 g/dL      (Ref: 13.5 - 17.5)  [MILD ANEMIA]
+   - Fasting Blood Sugar (FBS)        : 132.0 mg/dL    (Ref: 70 - 100)     [ELEVATED]
+   - HbA1c                            : 6.7 %          (Ref: < 5.7%)       [DIABETIC RANGE]
+
+4. VITALS & CARDIOVASCULAR:
+   - Blood Pressure (BP)              : 142/88 mmHg    (Ref: < 120/80)     [HYPERTENSIVE]
+   - Body Mass Index (BMI)            : 28.8           (Ref: 18.5 - 24.9)  [OVERWEIGHT]
+----------------------------------------------------------------------
+CLINICAL IMPRESSION:
+Laboratory findings demonstrate moderately reduced Glomerular Filtration Rate
+with significant macroalbuminuria and elevated serum creatinine.
+KDIGO Category corresponds to Stage G3b. RAAS blockade and renal diet modification advised.
+======================================================================
