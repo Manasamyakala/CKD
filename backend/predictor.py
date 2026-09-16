@@ -200,13 +200,13 @@ class NefroPredictor:
 
         # 4 Stages Evaluation: Normal, Medium, Critical, Advance
         # Stage 1: Normal Stage (Healthy / No CKD)
-        if sc <= 1.0 and gfr >= 90 and prot < 0.15 and bun <= 25 and ml_pred_class == 0:
+        if sc <= 1.1 and gfr >= 90 and prot < 0.15 and bun <= 25:
             is_ckd = False
             four_stage = "Normal Stage"
             stage_description = "Healthy Kidneys / Optimal Function (Stage G0)"
             risk_level = "Low / Normal Risk"
             risk_color = "#28a745"
-            prob_ckd = min(prob_ckd, 18.5)
+            prob_ckd = min(prob_ckd, 12.0)
 
         # Stage 4: Advance Stage (Severe / ESRD)
         elif sc > 3.0 or gfr < 30 or prot > 2.0 or bun > 50:

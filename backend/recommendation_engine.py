@@ -136,61 +136,99 @@ def generate_recommendations(patient_data, prediction_result):
     # ==========================================
     # 2. PERSONALIZED DIET & FOOD INTAKE PLAN
     # ==========================================
-    # Determine protein target based on stage
-    if "G4" in kdigo_stage or "G5" in kdigo_stage:
+    four_stage = prediction_result.get("four_stage_label")
+    if not four_stage:
+        kdigo_str = str(kdigo_stage)
+        gfr = float(patient_data.get("GFR", patient_data.get("gfr", patient_data.get("egfr", 90.0))))
+        if not is_ckd:
+            four_stage = "Normal Stage"
+        elif gfr < 30 or "G4" in kdigo_str or "G5" in kdigo_str:
+            four_stage = "Advance Stage"
+        elif gfr < 60 or "G3" in kdigo_str:
+            four_stage = "Critical Stage"
+        else:
+            four_stage = "Medium Stage"
+
+    if not is_ckd or four_stage == "Normal Stage":
+        protein_target = "0.80 - 1.00 g per kg body weight/day (Standard Healthy RDA)"
+        protein_explanation = "Maintains optimal muscle mass and cellular repair without renal strain."
+        sodium_target = "2,000 - 2,300 mg/day (Standard Healthy Salt Intake)"
+        if edema == 1:
+            fluid_target = "1.0 to 1.5 Liters/day"
+            fluid_note = "Mild fluid control recommended due to peripheral edema."
+        else:
+            fluid_target = "2.0 to 2.5 Liters/day (Optimal Healthy Hydration)"
+            fluid_note = "Promotes effective renal perfusion and metabolic waste clearance."
+        foods_to_eat = [
+            {"food": "Fresh Berries & Apples", "benefit": "Rich in antioxidants and fiber with zero renal burden."},
+            {"food": "Cauliflower & Green Vegetables", "benefit": "High in Vitamin C, folate, and digestive fiber."},
+            {"food": "Egg Whites & Fish", "benefit": "High-quality lean protein for tissue maintenance."},
+            {"food": "Garlic, Onions & Olive Oil", "benefit": "Natural anti-inflammatory agents that support cardiovascular health."}
+        ]
+        foods_to_avoid = [
+            {"food": "Excessive Salt & Sodium", "reason": "High salt intake elevates blood pressure over time."},
+            {"food": "Ultra-Processed Fast Food", "reason": "High in trans fats, artificial additives, and refined sugars."}
+        ]
+
+    elif four_stage == "Medium Stage" or "G1" in str(kdigo_stage) or "G2" in str(kdigo_stage):
+        protein_target = "0.70 - 0.80 g per kg body weight/day (Mild Protein Control)"
+        protein_explanation = "Prevents early glomerular hyperfiltration while preserving lean body mass."
+        sodium_target = "< 2,000 mg/day (Low Sodium Intake)"
+        if edema == 1:
+            fluid_target = "1.0 to 1.5 Liters/day"
+            fluid_note = "Fluid limitation indicated for peripheral swelling."
+        else:
+            fluid_target = "2.0 Liters/day (Standard Hydration)"
+            fluid_note = "Consistent hydration prevents renal hypoperfusion."
+        foods_to_eat = [
+            {"food": "Blueberries & Red Bell Peppers", "benefit": "Low potassium fruit and vegetable options rich in Vitamin C."},
+            {"food": "Cauliflower & Cabbage", "benefit": "Low potassium fiber sources that protect renal tissue."},
+            {"food": "Egg Whites & Silken Tofu", "benefit": "Pure protein with minimal phosphorus burden."},
+            {"food": "Extra Virgin Olive Oil", "benefit": "Reduces inflammatory cytokine activity."}
+        ]
+        foods_to_avoid = [
+            {"food": "Dark Colas & Sodas", "reason": "Packed with inorganic phosphate additives that damage vessel walls."},
+            {"food": "Processed Meats & Canned Soups", "reason": "Excessive sodium load and nitrogenous waste."},
+            {"food": "Over-the-Counter NSAIDs", "reason": "Directly constricts renal arterioles and lowers GFR."}
+        ]
+
+    elif four_stage == "Critical Stage" or "G3" in str(kdigo_stage):
+        protein_target = "0.60 - 0.70 g per kg body weight/day (Moderate Protein Restriction)"
+        protein_explanation = "Reduces blood urea nitrogen (BUN) accumulation and slows filtration loss."
+        sodium_target = "< 1,500 mg/day (Strict Low Sodium)"
+        if edema == 1:
+            fluid_target = "1.0 to 1.5 Liters/day"
+            fluid_note = "Strict fluid limitation required to control edema and blood pressure."
+        else:
+            fluid_target = "1.5 to 1.8 Liters/day"
+            fluid_note = "Measured fluid intake maintains balance without overloading kidneys."
+        foods_to_eat = [
+            {"food": "Apples, Strawberries & Cranberries", "benefit": "Low potassium fruits rich in pectin fiber."},
+            {"food": "Cabbage & Steamed White Fish", "benefit": "Easily digestible low-nitrogen meal components."},
+            {"food": "Garlic & Olive Oil", "benefit": "Flavor enhancers that eliminate the need for added salt."}
+        ]
+        foods_to_avoid = [
+            {"food": "High Potassium Foods (Bananas, Oranges, Tomatoes, Potatoes)", "reason": "Prevents hyperkalemia and cardiac complications."},
+            {"food": "High Phosphorus Foods (Processed Cheese, Dairy, Nuts)", "reason": "Prevents vascular calcification and mineral bone disease."},
+            {"food": "Processed Salt & Canned Meats", "reason": "Causes severe hypertension and fluid retention."}
+        ]
+
+    else: # Advance Stage / Stage G4-G5 / ESRD
         protein_target = "0.55 - 0.60 g per kg body weight/day (Strict Low-Protein with Keto-analogues)"
-        protein_explanation = "Lowers nitrogenous waste (blood urea) buildup and delays requirement for dialysis."
-    elif "G3" in kdigo_stage:
-        protein_target = "0.60 - 0.75 g per kg body weight/day (Moderate Protein Restriction)"
-        protein_explanation = "Reduces glomerular hyperfiltration while preserving lean body mass."
-    else:
-        protein_target = "0.80 g per kg body weight/day (Standard Recommended Dietary Allowance)"
-        protein_explanation = "Maintains optimal muscle mass without putting excess strain on renal glomeruli."
-
-    # Sodium target
-    sodium_target = "< 2,000 mg/day (less than 1 level teaspoon of salt across all meals)"
-    
-    # Fluid recommendation
-    if edema == 1:
-        fluid_target = "Strict Fluid Limitation: 1.0 to 1.2 Liters/day (including tea, soups, and water)"
-        fluid_note = "Due to fluid retention/edema, excess fluid increases cardiac strain and peripheral swelling."
-    else:
-        fluid_target = "Adequate Hydration: 2.0 to 2.5 Liters/day (consistent intake throughout waking hours)"
-        fluid_note = "Adequate fluid prevents renal hypoperfusion and reduces crystallization risk."
-
-    # Superfoods to eat
-    foods_to_eat = [
-        {"food": "Blueberries, Strawberries & Cranberries", "benefit": "Rich in anthocyanins and antioxidants, low in potassium and phosphorus."},
-        {"food": "Cauliflower & Cabbage", "benefit": "High in Vitamin C, folate, and fiber with minimal potassium burden."},
-        {"food": "Red Bell Peppers", "benefit": "Extremely low in potassium while providing 150% daily Vitamin C and Vitamin A."},
-        {"food": "Garlic & Onions", "benefit": "Natural anti-inflammatory and anti-microbial agents that enhance food flavor without adding sodium."},
-        {"food": "Egg Whites", "benefit": "Pure high-biological-value protein with virtually zero phosphorus (unlike whole egg yolk)."},
-        {"food": "Extra Virgin Olive Oil", "benefit": "Polyphenol-rich healthy fat that reduces inflammatory cytokines and lipid peroxidation."},
-        {"food": "Apples & Pineapples", "benefit": "Low potassium fruit options rich in pectin fiber and digestive enzymes."}
-    ]
-
-    # Foods to strictly avoid
-    foods_to_avoid = [
-        {"food": "Dark Colas & Canned Sodas", "reason": "Packed with inorganic phosphate additives which are rapidly absorbed and damage blood vessels."},
-        {"food": "Processed Meats (Sausages, Bacon, Cured meats)", "reason": "Excessive sodium, nitrates, and high protein catabolite burden."},
-        {"food": "Canned Soups & Packaged Instant Meals", "reason": "Hidden sodium often exceeding 1,000 mg per serving."},
-        {"food": "Over-the-Counter NSAIDs (Ibuprofen, Naproxen)", "reason": "Directly constricts afferent renal arterioles, causing acute drops in GFR."}
-    ]
-
-    # High potassium foods restriction if K > 4.8
-    if potassium >= 4.8:
-        foods_to_avoid.extend([
-            {"food": "Bananas, Oranges & Cantaloupe", "reason": "High potassium content can trigger cardiac dysrhythmias in impaired kidney function."},
-            {"food": "Potatoes & Tomatoes (unless boiled and drained/leached)", "reason": "High potassium concentration per serving."},
-            {"food": "Avocados & Spinach", "reason": "Extremely dense in potassium; replace with cucumbers, lettuce, and cabbage."}
-        ])
-
-    # High phosphorus foods restriction if P > 4.3 or advanced stage
-    if phosphorus >= 4.3 or "G3" in kdigo_stage or "G4" in kdigo_stage or "G5" in kdigo_stage:
-        foods_to_avoid.extend([
-            {"food": "Processed Cheese & Excess Dairy", "reason": "Dense in bioavailable phosphorus, accelerating arterial calcification."},
-            {"food": "Nuts, Seeds & Whole Bran in large amounts", "reason": "High organic phosphorus; limit portion size to 1 ounce."}
-        ])
+        protein_explanation = "Minimizes uremic toxin buildup and delays dialysis requirement."
+        sodium_target = "< 1,200 mg/day (Very Low Sodium)"
+        fluid_target = "1.0 to 1.2 Liters/day (Strict Fluid Restriction)"
+        fluid_note = "Prevents severe fluid overload, pulmonary edema, and heart failure."
+        foods_to_eat = [
+            {"food": "Steamed Cabbage & White Rice", "benefit": "Ultra-low potassium and low phosphorus carbohydrate base."},
+            {"food": "Egg Whites (boiled)", "benefit": "Essential amino acids with zero phosphorus burden."},
+            {"food": "Apple Slices & Cranberry Juice", "benefit": "Safe low potassium hydration and antioxidant support."}
+        ]
+        foods_to_avoid = [
+            {"food": "Bananas, Oranges, Potatoes, Avocados & Spinach", "reason": "High risk of life-threatening hyperkalemia."},
+            {"food": "Dairy, Cheese, Whole Grains & Colas", "reason": "Severe phosphorus accumulation causing bone/cardiovascular damage."},
+            {"food": "Salt Substitutes (Potassium Chloride based)", "reason": "Directly causes dangerous spikes in blood potassium."}
+        ]
 
     diet_plan = {
         "daily_protein_target": protein_target,
@@ -201,10 +239,10 @@ def generate_recommendations(patient_data, prediction_result):
         "recommended_foods": foods_to_eat,
         "foods_to_avoid": foods_to_avoid,
         "meal_framework": {
-            "breakfast": "Egg white scramble with red bell peppers, steamed apples, and herbal ginger tea (no added salt).",
-            "lunch": "White basmati rice or sourdough bread, grilled cauliflower steaks, olive oil seasoned cucumber salad, and low-sodium vegetable soup.",
-            "snack": "A cup of fresh blueberries or strawberries, or 1 small apple.",
-            "dinner": "Steamed white fish or silken tofu, cabbage sauteed with garlic and cumin, with a modest portion of steamed white rice."
+            "breakfast": "Egg white scramble with red bell peppers, steamed apples, and herbal tea (no salt).",
+            "lunch": "White rice, grilled cauliflower, cucumber salad with olive oil, low sodium vegetable broth.",
+            "snack": "Fresh blueberries or 1 small apple.",
+            "dinner": "Steamed fish or tofu with sauteed cabbage, garlic, and white rice."
         }
     }
 
@@ -214,38 +252,33 @@ def generate_recommendations(patient_data, prediction_result):
     yoga_asanas = [
         {
             "name": "Bhujangasana (Cobra Pose)",
-            "sanskrit": "भुजङ्गासन",
             "duration": "3 rounds, hold for 20-30 seconds each",
-            "instructions": "Lie prone on your stomach, palms beside your shoulders. Inhale and gently lift your chest while keeping your hips grounded. Keep shoulders relaxed and elbows slightly bent.",
-            "renal_benefit": "Gently stimulates and massages the adrenal glands and renal tissue, encouraging local blood perfusion and reducing abdominal stagnation."
+            "instructions": "Lie prone on stomach, palms beside shoulders. Inhale and gently lift chest while keeping hips grounded. Keep shoulders relaxed.",
+            "renal_benefit": "Gently stimulates renal tissue, encouraging local blood perfusion and reducing abdominal congestion."
         },
         {
             "name": "Ardha Matsyendrasana (Half Lord of the Fishes Pose)",
-            "sanskrit": "अर्धमत्स्येन्द्रासन",
             "duration": "2 rounds each side, hold for 30 seconds",
-            "instructions": "Sit tall with legs straight. Bend right knee and place right foot outside left thigh. Twist torso to the right, placing left elbow on outside of right knee. Breathe deeply.",
-            "renal_benefit": "Axial spinal twisting creates intra-abdominal pressure changes that help drain congested blood from the kidneys, liver, and spleen."
+            "instructions": "Sit tall with legs straight. Bend right knee, place right foot outside left thigh. Twist torso to the right.",
+            "renal_benefit": "Spinal twisting creates intra-abdominal pressure changes that help drain congested renal vasculature."
         },
         {
             "name": "Setu Bandhasana (Bridge Pose)",
-            "sanskrit": "सेतुबन्धासन",
             "duration": "3 rounds, hold for 30-45 seconds each",
-            "instructions": "Lie supine with knees bent and feet hip-width apart. Press into your feet and lift your pelvis toward the ceiling. Interlace fingers under your back.",
-            "renal_benefit": "Inversion effect reduces peripheral venous pooling in the legs (reducing edema) and regulates autonomic blood pressure control."
+            "instructions": "Lie supine with knees bent. Press into feet and lift pelvis toward the ceiling.",
+            "renal_benefit": "Inversion effect reduces peripheral leg edema and assists autonomic blood pressure regulation."
         },
         {
             "name": "Paschimottanasana (Seated Forward Bend)",
-            "sanskrit": "पश्चिमोत्तानासन",
             "duration": "3 rounds, hold for 30-45 seconds each",
-            "instructions": "Sit with legs extended straight. Inhale arms overhead, exhale and hinge forward from the hips, reaching for your shins or toes without rounding shoulders aggressively.",
-            "renal_benefit": "Stimulates the posterior renal meridians, stretches the lower back muscles, and promotes calm parasympathetic activity."
+            "instructions": "Sit with legs extended straight. Inhale arms overhead, exhale and hinge forward from hips.",
+            "renal_benefit": "Stretches lower back renal meridians and promotes parasympathetic nervous system activity."
         },
         {
             "name": "Anulom Vilom (Alternate Nostril Pranayama)",
-            "sanskrit": "अनुलोम विलोम प्राणायाम",
-            "duration": "10 minutes daily in the morning and evening",
-            "instructions": "Sit in a comfortable upright posture. Close right nostril with thumb, inhale slowly through left nostril (4 counts). Close left nostril with ring finger, release thumb and exhale through right (4 counts). Repeat opposite.",
-            "renal_benefit": "Proven to lower sympathetic overactivity, reduce systemic arterial blood pressure, and mitigate renal oxidative stress."
+            "duration": "10 minutes daily in morning and evening",
+            "instructions": "Sit in comfortable upright posture. Alternate breathing slowly through left and right nostrils.",
+            "renal_benefit": "Lowers sympathetic overactivity, reduces systemic arterial blood pressure, and mitigates renal oxidative stress."
         }
     ]
 

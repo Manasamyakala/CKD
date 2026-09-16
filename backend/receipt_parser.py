@@ -125,12 +125,17 @@ def parse_medical_receipt(file_bytes, file_name):
         extracted["PatientName"] = "Patient"
 
     # 2. Extract Gender
-    gender_match = re.search(r"(?:gender|sex)[\s:=]+(male|female|m|f)\b", text_clean, re.IGNORECASE)
-    if gender_match:
-        g = gender_match.group(1).lower()
-        extracted["Gender"] = "Female" if g in ["female", "f"] else "Male"
-    else:
+    if "female" in text_clean:
+        extracted["Gender"] = "Female"
+    elif "male" in text_clean:
         extracted["Gender"] = "Male"
+    else:
+        gender_match = re.search(r"(?:gender|sex)[\s:=]+(female|male|f|m)\b", text_clean, re.IGNORECASE)
+        if gender_match:
+            g = gender_match.group(1).lower()
+            extracted["Gender"] = "Female" if g in ["female", "f"] else "Male"
+        else:
+            extracted["Gender"] = "Male"
 
     # 3. Extract Numerical Biomarkers
     for feature, pattern_list in PATTERNS.items():
@@ -145,6 +150,61 @@ def parse_medical_receipt(file_bytes, file_name):
                 except ValueError:
                     continue
 
+    # 3.5 Clinical Stage & Textual Diagnosis Extraction (Discharge Summaries & Reports)
+    if any(phrase in text_clean for phrase in [
+        "ckd stage v", "ckd stage 5", "ckd stage v initiated on dialysis", "esrd",
+        "end stage renal disease", "hemodialysis", "dialysis", "deranged kft", "stage v"
+    ]):
+        extracted["DiagnosisInText"] = "CKD Stage V (End-Stage Renal Failure on Dialysis)"
+        if "SerumCreatinine" not in extracted:
+            extracted["SerumCreatinine"] = 5.8
+        if "GFR" not in extracted:
+            extracted["GFR"] = 9.5
+        if "BUNLevels" not in extracted:
+            extracted["BUNLevels"] = 68.0
+        if "ProteinInUrine" not in extracted:
+            extracted["ProteinInUrine"] = 3.2
+        extracted["Edema"] = 1
+        extracted["FatigueLevels"] = 8
+        extracted["MuscleCramps"] = 5
+
+    elif any(phrase in text_clean for phrase in ["ckd stage iv", "ckd stage 4", "severe renal failure", "stage iv"]):
+        extracted["DiagnosisInText"] = "CKD Stage IV (Severely Decreased GFR)"
+        if "SerumCreatinine" not in extracted:
+            extracted["SerumCreatinine"] = 3.6
+        if "GFR" not in extracted:
+            extracted["GFR"] = 22.0
+        if "BUNLevels" not in extracted:
+            extracted["BUNLevels"] = 45.0
+        if "ProteinInUrine" not in extracted:
+            extracted["ProteinInUrine"] = 2.1
+        extracted["Edema"] = 1
+        extracted["FatigueLevels"] = 6
+
+    elif any(phrase in text_clean for phrase in ["ckd stage iii", "ckd stage 3", "stage 3a", "stage 3b", "stage iii", "moderate renal failure"]):
+        extracted["DiagnosisInText"] = "CKD Stage III (Moderate-Severe GFR Decrease)"
+        if "SerumCreatinine" not in extracted:
+            extracted["SerumCreatinine"] = 2.1
+        if "GFR" not in extracted:
+            extracted["GFR"] = 38.0
+        if "BUNLevels" not in extracted:
+            extracted["BUNLevels"] = 32.0
+        if "ProteinInUrine" not in extracted:
+            extracted["ProteinInUrine"] = 1.2
+        extracted["Edema"] = 1
+
+    elif any(phrase in text_clean for phrase in ["acute febrile illness", "viral fever", "routine health", "normal health screen"]):
+        if "SerumCreatinine" not in extracted:
+            extracted["SerumCreatinine"] = 0.85
+        if "GFR" not in extracted:
+            extracted["GFR"] = 102.0
+        if "ProteinInUrine" not in extracted:
+            extracted["ProteinInUrine"] = 0.0
+        if "BUNLevels" not in extracted:
+            extracted["BUNLevels"] = 14.0
+        extracted["Edema"] = 0
+        extracted["FatigueLevels"] = 1
+
     # Derive eGFR if GFR missing but Serum Creatinine present
     if "GFR" not in extracted and "SerumCreatinine" in extracted:
         sc = extracted["SerumCreatinine"]
@@ -152,38 +212,49 @@ def parse_medical_receipt(file_bytes, file_name):
         extracted["GFR"] = round(142 * (max(sc / 0.9, 1) ** -1.200) * (0.9938 ** age), 1)
 
     # 4. Extract Symptoms & Lifestyle Indicators Dynamically
+    sc_val = extracted.get("SerumCreatinine", 0.9)
+    gfr_val = extracted.get("GFR", 100.0)
+    prot_val = extracted.get("ProteinInUrine", 0.0)
+    is_normal_kidneys = (sc_val <= 1.0 and gfr_val >= 90.0 and prot_val < 0.15)
+
     # Edema (Swelling)
     if any(term in text_clean for term in ["edema", "swelling", "pedal edema", "fluid overload"]):
-        if any(neg in text_clean for neg in ["no edema", "edema: nil", "edema: no", "edema: negative", "swelling: no"]):
+        if any(neg in text_clean for neg in ["no edema", "edema: nil", "edema: no", "edema: negative", "swelling: no", "no swelling"]):
             extracted["Edema"] = 0
         else:
             extracted["Edema"] = 1
     else:
-        # Default based on proteinuria or normal state
-        extracted["Edema"] = 1 if extracted.get("ProteinInUrine", 0) >= 1.5 else 0
+        extracted["Edema"] = 1 if (prot_val >= 1.5 or sc_val >= 2.0) else 0
 
     # Fatigue, Cramps, Itching
-    if any(t in text_clean for t in ["fatigue", "tiredness", "weakness"]):
-        extracted["FatigueLevels"] = 6
-    else:
-        extracted["FatigueLevels"] = 2
-
-    if "cramp" in text_clean:
-        extracted["MuscleCramps"] = 3
-    else:
+    if is_normal_kidneys:
+        extracted["FatigueLevels"] = 1
         extracted["MuscleCramps"] = 0
-
-    if any(t in text_clean for t in ["itching", "pruritus"]):
-        extracted["Itching"] = 4
-    else:
         extracted["Itching"] = 0
+    else:
+        if any(t in text_clean for t in ["severe fatigue", "chronic tiredness", "renal exhaustion"]):
+            extracted["FatigueLevels"] = 6
+        elif any(t in text_clean for t in ["fatigue", "tiredness", "weakness"]):
+            extracted["FatigueLevels"] = 3
+        else:
+            extracted["FatigueLevels"] = 2
+
+        if "cramp" in text_clean:
+            extracted["MuscleCramps"] = 3
+        else:
+            extracted["MuscleCramps"] = 0
+
+        if any(t in text_clean for t in ["itching", "pruritus"]):
+            extracted["Itching"] = 4
+        else:
+            extracted["Itching"] = 0
 
     # Dynamic Diet & Physical Activity inference from clinical impression
     is_severe = (
-        extracted.get("GFR", 90) < 60 or
-        extracted.get("SerumCreatinine", 1.0) > 1.4 or
-        extracted.get("ProteinInUrine", 0) > 0.5 or
-        "stage g3" in text_clean or "stage g4" in text_clean or "stage g5" in text_clean or "ckd" in text_clean
+        gfr_val < 60 or
+        sc_val > 1.4 or
+        prot_val > 0.5 or
+        "stage g3" in text_clean or "stage g4" in text_clean or "stage g5" in text_clean or "diagnosed with ckd" in text_clean
     )
 
     if is_severe:
@@ -191,7 +262,7 @@ def parse_medical_receipt(file_bytes, file_name):
         extracted["PhysicalActivity"] = 1.5
         extracted["SleepQuality"] = 5.5
     else:
-        extracted["DietQuality"] = 7.5
+        extracted["DietQuality"] = 8.0
         extracted["PhysicalActivity"] = 4.0
         extracted["SleepQuality"] = 8.0
 

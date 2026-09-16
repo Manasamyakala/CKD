@@ -146,6 +146,9 @@ def safe_int(val, default=0):
     except (ValueError, TypeError):
         return default
 
+def clamp(val, min_v, max_v):
+    return max(min_v, min(max_v, val))
+
 @st.cache_resource
 def load_predictors():
     return {
@@ -267,32 +270,32 @@ with st.sidebar:
 # ==========================================
 # MAIN PAGE HEADER & WORKFLOW ARROWS
 # ==========================================
-st.markdown('<div class="main-header">🩺 CKD Risk Assessment & Personalized Healthcare</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-header">CKD Risk Assessment & Personalized Healthcare</div>', unsafe_allow_html=True)
 
 # User-friendly workflow indicator with arrows
 st.markdown("""
 <div class="flow-bar">
-    <span>📄 1. Upload Lab Report / Receipt</span>
-    <span>➔</span>
-    <span>🔍 2. AI Risk & KDIGO Prediction</span>
-    <span>➔</span>
-    <span>💊 3. Prescribed Tablets & Personal Care</span>
+    <span>1. Upload Lab Report / Receipt</span>
+    <span>-></span>
+    <span>2. AI Risk & KDIGO Prediction</span>
+    <span>-></span>
+    <span>3. Prescribed Tablets & Personal Care</span>
 </div>
 """, unsafe_allow_html=True)
 
 if not st.session_state.authenticated:
-    st.info(" Please log in with your credentials or create a new account in the sidebar to assess patient kidney health.")
+    st.info("Please log in with your credentials or create a new account in the sidebar to assess patient kidney health.")
     st.stop()
 
 # ==========================================
 # TABS INTERFACE
 # ==========================================
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
-    " 1. Upload Report & Patient Data",
-    " 2. CKD Prediction & Tablets",
-    " 3. Personalized Diet & Yoga",
-    " 4. MongoDB Records",
-    " 5. Model Performance"
+    "1. Upload Report & Patient Data",
+    "2. CKD Prediction & Tablets",
+    "3. Personalized Diet & Yoga",
+    "4. MongoDB Records",
+    "5. Model Performance"
 ])
 
 # ----------------------------------------------------
@@ -408,7 +411,8 @@ with tab1:
             with c1:
                 p_name = st.text_input("Patient Name", value=str(ext.get("PatientName", "Patient")))
             with c2:
-                p_age = st.number_input("Patient Age", min_value=18, max_value=105, value=safe_int(ext.get("Age"), 40))
+                age_val = clamp(safe_int(ext.get("Age"), 40), 1, 105)
+                p_age = st.number_input("Patient Age", min_value=1, max_value=105, value=age_val)
             with c3:
                 gen_idx = 1 if str(ext.get("Gender", "Male")).lower() == "female" else 0
                 p_gender = st.selectbox("Gender", ["Male", "Female"], index=gen_idx)
@@ -417,74 +421,74 @@ with tab1:
             st.markdown("#### 1. Renal Function Biomarkers")
             r1, r2, r3, r4 = st.columns(4)
             with r1:
-                sc_val = safe_float(ext.get("SerumCreatinine"), 0.90)
+                sc_val = clamp(safe_float(ext.get("SerumCreatinine"), 0.90), 0.2, 15.0)
                 serum_creatinine = st.number_input("Serum Creatinine (mg/dL)", min_value=0.2, max_value=15.0, value=sc_val, step=0.05, help="Healthy range: 0.6 - 1.2 mg/dL")
             with r2:
-                bun_val = safe_float(ext.get("BUNLevels"), 14.0)
+                bun_val = clamp(safe_float(ext.get("BUNLevels"), 14.0), 2.0, 150.0)
                 bun_levels = st.number_input("Blood Urea Nitrogen / BUN (mg/dL)", min_value=2.0, max_value=150.0, value=bun_val, step=0.5, help="Healthy range: 7 - 20 mg/dL")
             with r3:
-                gfr_val = safe_float(ext.get("GFR"), 100.0)
+                gfr_val = clamp(safe_float(ext.get("GFR"), 100.0), 5.0, 160.0)
                 gfr = st.number_input("eGFR (mL/min/1.73m²)", min_value=5.0, max_value=160.0, value=gfr_val, step=1.0, help="Healthy range: >= 90 mL/min")
             with r4:
-                hemo_val = safe_float(ext.get("HemoglobinLevels"), 14.5)
+                hemo_val = clamp(safe_float(ext.get("HemoglobinLevels"), 14.5), 4.0, 20.0)
                 hemo = st.number_input("Hemoglobin (g/dL)", min_value=4.0, max_value=20.0, value=hemo_val, step=0.1, help="Healthy range: 13.5 - 17.5 g/dL")
 
             # Section C: Urinalysis & Proteinuria
             st.markdown("#### 2. Urine Protein & Albumin")
             u1, u2 = st.columns(2)
             with u1:
-                prot_val = safe_float(ext.get("ProteinInUrine"), 0.0)
+                prot_val = clamp(safe_float(ext.get("ProteinInUrine"), 0.0), 0.0, 10.0)
                 protein_urine = st.number_input("Protein In Urine (g/day)", min_value=0.0, max_value=10.0, value=prot_val, step=0.1, help="Healthy range: < 0.15 g/day")
             with u2:
-                acr_val = safe_float(ext.get("ACR"), 10.0)
+                acr_val = clamp(safe_float(ext.get("ACR"), 10.0), 0.0, 500.0)
                 acr = st.number_input("Albumin-to-Creatinine Ratio / ACR (mg/g)", min_value=0.0, max_value=500.0, value=acr_val, step=5.0, help="Healthy range: < 30 mg/g")
 
             # Section D: Vitals & Metabolic
             st.markdown("#### 3. Blood Pressure & Glucose")
             v1, v2, v3, v4 = st.columns(4)
             with v1:
-                sbp_val = safe_int(ext.get("SystolicBP"), 120)
+                sbp_val = clamp(safe_int(ext.get("SystolicBP"), 120), 70, 220)
                 systolic_bp = st.number_input("Systolic Blood Pressure (mmHg)", min_value=70, max_value=220, value=sbp_val)
             with v2:
-                dbp_val = safe_int(ext.get("DiastolicBP"), 80)
+                dbp_val = clamp(safe_int(ext.get("DiastolicBP"), 80), 40, 140)
                 diastolic_bp = st.number_input("Diastolic Blood Pressure (mmHg)", min_value=40, max_value=140, value=dbp_val)
             with v3:
-                fbs_val = safe_float(ext.get("FastingBloodSugar"), 90.0)
+                fbs_val = clamp(safe_float(ext.get("FastingBloodSugar"), 90.0), 50.0, 400.0)
                 fbs = st.number_input("Fasting Glucose (mg/dL)", min_value=50.0, max_value=400.0, value=fbs_val, step=1.0)
             with v4:
-                a1c_val = safe_float(ext.get("HbA1c"), 5.4)
+                a1c_val = clamp(safe_float(ext.get("HbA1c"), 5.4), 3.5, 16.0)
                 hba1c = st.number_input("HbA1c (%)", min_value=3.5, max_value=16.0, value=a1c_val, step=0.1)
 
             # Section E: Electrolytes
             st.markdown("#### 4. Serum Electrolytes")
             e1, e2, e3, e4 = st.columns(4)
             with e1:
-                na_val = safe_float(ext.get("SerumElectrolytesSodium"), 140.0)
+                na_val = clamp(safe_float(ext.get("SerumElectrolytesSodium"), 140.0), 110.0, 165.0)
                 sodium = st.number_input("Sodium (mEq/L)", min_value=110.0, max_value=165.0, value=na_val, step=0.5)
             with e2:
-                k_val = safe_float(ext.get("SerumElectrolytesPotassium"), 4.2)
+                k_val = clamp(safe_float(ext.get("SerumElectrolytesPotassium"), 4.2), 2.0, 8.5)
                 potassium = st.number_input("Potassium (mEq/L)", min_value=2.0, max_value=8.5, value=k_val, step=0.1)
             with e3:
-                ca_val = safe_float(ext.get("SerumElectrolytesCalcium"), 9.5)
+                ca_val = clamp(safe_float(ext.get("SerumElectrolytesCalcium"), 9.5), 5.0, 15.0)
                 calcium = st.number_input("Calcium (mg/dL)", min_value=5.0, max_value=15.0, value=ca_val, step=0.1)
             with e4:
-                p_val = safe_float(ext.get("SerumElectrolytesPhosphorus"), 3.5)
+                p_val = clamp(safe_float(ext.get("SerumElectrolytesPhosphorus"), 3.5), 1.0, 10.0)
                 phosphorus = st.number_input("Phosphorus (mg/dL)", min_value=1.0, max_value=10.0, value=p_val, step=0.1)
 
             # Section F: Lifestyle & Symptoms
             st.markdown("#### 5. Lifestyle & Physical Symptoms")
             l1, l2, l3, l4 = st.columns(4)
             with l1:
-                bmi_val = safe_float(ext.get("BMI"), 22.5)
+                bmi_val = clamp(safe_float(ext.get("BMI"), 22.5), 12.0, 55.0)
                 bmi = st.number_input("Body Mass Index (BMI)", min_value=12.0, max_value=55.0, value=bmi_val, step=0.2)
             with l2:
-                diet_q = safe_float(ext.get("DietQuality"), 8.0)
+                diet_q = clamp(safe_float(ext.get("DietQuality"), 8.0), 0.0, 10.0)
                 diet_quality = st.slider("Diet Quality Score (0: Poor, 10: Healthy)", 0.0, 10.0, diet_q, step=0.5)
             with l3:
-                act_val = safe_float(ext.get("PhysicalActivity"), 4.0)
+                act_val = clamp(safe_float(ext.get("PhysicalActivity"), 4.0), 0.0, 15.0)
                 activity = st.slider("Weekly Physical Activity (Hours)", 0.0, 15.0, act_val, step=0.5)
             with l4:
-                sleep_q = safe_float(ext.get("SleepQuality"), 8.0)
+                sleep_q = clamp(safe_float(ext.get("SleepQuality"), 8.0), 4.0, 10.0)
                 sleep_quality = st.slider("Sleep Quality Score (4: Poor, 10: Restful)", 4.0, 10.0, sleep_q, step=0.5)
 
             s1, s2, s3, s4 = st.columns(4)
@@ -492,13 +496,13 @@ with tab1:
                 ed_idx = 1 if safe_int(ext.get("Edema"), 0) == 1 else 0
                 has_edema = st.selectbox("Swelling / Peripheral Edema", ["No", "Yes"], index=ed_idx)
             with s2:
-                fat_val = safe_int(ext.get("FatigueLevels"), 1)
+                fat_val = clamp(safe_int(ext.get("FatigueLevels"), 1), 0, 10)
                 fatigue_lvl = st.slider("Fatigue Level (0-10)", 0, 10, fat_val)
             with s3:
-                cramp_val = safe_int(ext.get("MuscleCramps"), 0)
+                cramp_val = clamp(safe_int(ext.get("MuscleCramps"), 0), 0, 7)
                 cramps_lvl = st.slider("Muscle Cramps (per week)", 0, 7, cramp_val)
             with s4:
-                itch_val = safe_int(ext.get("Itching"), 0)
+                itch_val = clamp(safe_int(ext.get("Itching"), 0), 0, 10)
                 itching_lvl = st.slider("Itching Severity (0-10)", 0, 10, itch_val)
 
             submit_btn = patient_form.form_submit_button("🔍 Predict CKD Risk & Generate Personalized Care Plan", use_container_width=True)
@@ -715,7 +719,7 @@ with tab3:
         yogas = recs["yoga_program"]
         exercise = recs["exercise_plan"]
 
-        st.subheader("🥗 Personalized Renal Nutrition & Daily Food Guide")
+        st.subheader("Personalized Renal Nutrition & Daily Food Guide")
         
         # Targets Row
         c_p, c_na, c_fl = st.columns(3)
@@ -728,16 +732,16 @@ with tab3:
 
         col_good, col_bad = st.columns(2)
         with col_good:
-            st.markdown("#### ✅ Recommended Kidney Superfoods")
+            st.markdown("####  Recommended Kidney Superfoods")
             for item in diet["recommended_foods"]:
                 st.markdown(f"- **{item['food']}**: {item['benefit']}")
 
         with col_bad:
-            st.markdown("#### ❌ Foods to Strictly Avoid")
+            st.markdown("####  Foods to Strictly Avoid")
             for item in diet["foods_to_avoid"]:
                 st.markdown(f"- **{item['food']}**: {item['reason']}")
 
-        st.markdown("#### 🍽️ Daily Meal Framework")
+        st.markdown("#### Daily Meal Framework")
         meal = diet["meal_framework"]
         st.markdown(f"""
         - **Breakfast:** {meal['breakfast']}
@@ -747,16 +751,17 @@ with tab3:
         """)
 
         st.markdown("---")
-        st.subheader("🧘 Kidney-Beneficial Therapeutic Yoga Program")
+        st.subheader("Kidney-Beneficial Therapeutic Yoga Program")
         st.write("Specific asanas shown to improve renal blood flow, reduce stress, and stabilize arterial blood pressure:")
 
         for y in yogas:
-            with st.expander(f"🧘 **{y['name']}** ({y['sanskrit']}) — {y['duration']}", expanded=True):
+            sanskrit_str = f" ({y['sanskrit']})" if y.get('sanskrit') else ""
+            with st.expander(f"**{y['name']}**{sanskrit_str} — {y['duration']}", expanded=True):
                 st.markdown(f"**Instructions:** {y['instructions']}")
                 st.markdown(f"**Renal Therapeutic Benefit:** {y['renal_benefit']}")
 
         st.markdown("---")
-        st.subheader("🏃 Tailored Weekly Exercise Schedule")
+        st.subheader("Tailored Weekly Exercise Schedule")
         col_ex1, col_ex2 = st.columns([1, 2])
         with col_ex1:
             st.markdown(f"**Target Intensity:** {exercise['intensity']}")
