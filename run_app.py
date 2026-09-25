@@ -19,7 +19,7 @@ def main():
     
     print("================================================================")
     print("       NefroAI: Chronic Kidney Disease Clinical Platform        ")
-    print("  Explainable AI & Personalized Healthcare (IEEE Access 2026)  ")
+    print("   Explainable AI & Personalized Healthcare  ")
     print("================================================================")
     print(f"Starting Streamlit dashboard from: {app_path}")
     print("Connecting to local MongoDB Compass at: mongodb://localhost:27017")
